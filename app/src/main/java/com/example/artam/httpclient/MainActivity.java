@@ -58,11 +58,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
 
-        String url = editText.getText().toString();
+        String url = editText.getText().toString().trim();
         boolean checkUrl = isValidUrl(url);
         if(checkUrl==true){
-            String http="http://";
-            url=http.concat(url);
+            String testhttp = url.substring(0,4);
+            if(!testhttp.equals("http")){
+                String http="http://";
+                url=http.concat(url);
+            }
             wv1.getSettings().setLoadsImagesAutomatically(true);
             wv1.getSettings().setJavaScriptEnabled(true);
             wv1.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
