@@ -1,5 +1,6 @@
 package com.example.artam.httpclient;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -11,14 +12,21 @@ import android.text.Html;
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
+import android.view.Window;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -28,110 +36,65 @@ import okhttp3.Callback;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "myTag";
     Button button;
     TextView text;
     EditText editText;
     URL url;
     String site;
-    private WebView mWebView;
-
+    private WebView wv1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //  text   = (TextView) findViewById(R.id.textView);
 
-        //  isOnline();
-
-
-   /* public void  isOnline() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-            text.setText("Cool!!");
-        }
-
-        text.setText("Error");
-    }*/
-
-
-        //   URLConnection openConnection();
         button = (Button) findViewById(R.id.button);
         editText = (EditText) findViewById(R.id.editText);
 
+        wv1=(WebView)findViewById(R.id.webView);
+        wv1.setWebViewClient(new MyBrowser());
 
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                site = editText.getText().toString();
 
-                OkHttpClient client = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url(site)
-                        .build();
+        String url = editText.getText().toString();
+        boolean checkUrl = isValidUrl(url);
+        if(checkUrl==true){
+            String http="http://";
+            url=http.concat(url);
+            wv1.getSettings().setLoadsImagesAutomatically(true);
+            wv1.getSettings().setJavaScriptEnabled(true);
+            wv1.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+            ////-------Exception Handling-------//////////
 
-                client.newCall(request).enqueue(new Callback() { // http://stackoverflow.com/questions/35541733/okhttp-android-download-a-html-page-and-display-this-content-in-a-view
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        Log.e(TAG, e.toString());
-                    }
+            wv1.setWebViewClient(new WebViewClient() {
+                public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                    Toast.makeText(getApplicationContext(), "Oh no! " + description, Toast.LENGTH_SHORT).show();
+                }
+            });
 
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        if (response.isSuccessful()) {
+            wv1.loadUrl(url);
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Please give a valid URL",
+                    Toast.LENGTH_LONG).show();
+            wv1.clearView();
+        }
 
-                            final String aFinalString = response.body().string();
-                            //final Spanned htmlaFinalString = Html.fromHtml(aFinalString);
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    text = (TextView) findViewById(R.id.textView);
-                                    text.setMovementMethod(new ScrollingMovementMethod());
-                                   // text.setText(htmlaFinalString);
-                                    //text.setText(aFinalString);
-                                    //text.setText(Html.fromHtml(aFinalString));
-                                    mWebView = (WebView) findViewById(R.id.activity_main_webview);
-                                    //text.setText(Html.fromHtml("<h2>Title</h2><br><p>Description here</p>"));
-                                }
-                            });
-                        }
-                    }
-                });
-
-                //text.setText("Button pressed!");
             }
         });
-
-       // String url = "http://square.github.io/okhttp/";
-
-
-
-
-
-
-       /*new AsyncTask<Void,Void,String>(){
-
-            @Override
-            protected String doInBackground(Void... voids) {
-                OkHttpClient client = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url(site)
-                        .build();
-
-                try {
-                    Response response = client.newCall(request).execute();
-                    Log.d(TAG, "doInBackground() called with: voids = [" + response.body().string() + "]");
-                    return response.body().string();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null; }
-            }.execute();
-*/
-
-
+    }
+    private class MyBrowser extends WebViewClient {
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            view.loadUrl(url);
+            return true;
+        }
+    }
+    public boolean isValidUrl(String url) {
+        Pattern p = Patterns.WEB_URL;
+        Matcher m = p.matcher(url.toLowerCase());
+        return m.matches();
     }
 }
